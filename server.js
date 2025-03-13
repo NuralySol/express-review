@@ -4,8 +4,6 @@ const jokes = require("./data/jokes.js");
 const albums = require("./data/albums.js");
 const { randomizer } = require("./helper/random.js")
 
-const bodyParser = require("body-parser");
-
 // TODO: need a helper functions as well:
 // Init an express server:
 const express = require("express");
@@ -41,6 +39,45 @@ app.get("/jokes", async (req, res) => {
     }
 });
 
+//* put updates in place, and modify the existing data:
+//* post on the other hand will actually create a new piece of data:
+app.put("/jokes/:id", async (req, res) => {
+    try {
+        const jokeId = parseInt(req.params.id, 10);
+        const jokeIndex = jokes.findIndex(joke => joke.id === jokeId);
+
+        if (jokeIndex === -1) {
+            return res.status(404).json({ error: `Joke with ID ${jokeId} not found.` });
+        }
+
+        // update the joke
+        jokes[jokeIndex] = { ...jokes[jokeIndex], ...req.body };
+
+        res.json({ message: "Joke updated successfully!", joke: jokes[jokeIndex] });
+
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update the joke" });
+    }
+});
+
+// delete the joke by id
+app.delete("/jokes/:id", async (req, res) => {
+    try {
+        const jokeId = parseInt(req.params.id, 10);
+        const jokeIndex = jokes.findIndex(joke => joke.id === jokeId);
+
+        if (jokeIndex === -1) {
+            return res.status(404).json({ error: `Joke with ID ${jokeId} not found.` });
+        }
+
+        const deletedJoke = jokes.splice(jokeIndex, 1);
+        res.json({ message: "Joke deleted successfully!", joke: deletedJoke });
+
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete the joke" });
+    }
+});
+
 //  albums API Route
 app.get("/albums", async (req, res) => {
     try {
@@ -57,12 +94,12 @@ app.get("/albums", async (req, res) => {
     }
 });
 
-//  404 Route Handler
+//  404 route Handler
 app.use((req, res) => {
     res.status(404).json({ error: "404 - Route Not Found" });
 });
 
-// start Server
+// start Server and listen to the default PORT
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
 });
